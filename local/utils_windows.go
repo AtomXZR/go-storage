@@ -12,7 +12,7 @@ import (
 func openReadf(path string) (*os.File, error) {
 	pathPtr, err := syscall.UTF16PtrFromString(path)
 	if err != nil {
-		return nil, err
+		return nil, toStorageError(err)
 	}
 
 	handle, err := windows.CreateFile(
@@ -25,7 +25,7 @@ func openReadf(path string) (*os.File, error) {
 		0,
 	)
 	if err != nil {
-		return nil, &os.PathError{Op: "open", Path: path, Err: err}
+		return nil, toStorageError(&os.PathError{Op: "open", Path: path, Err: err})
 	}
 
 	return os.NewFile(uintptr(handle), path), nil

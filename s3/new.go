@@ -29,7 +29,7 @@ func New(conf Config) (*S3Storage, error) {
 	})
 
 	if err != nil {
-		return nil, s3ErrorToFSError(err)
+		return nil, s3ErrorToStorageError(err)
 	}
 
 	return &S3Storage{

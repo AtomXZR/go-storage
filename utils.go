@@ -52,7 +52,7 @@ func NormalizeKey(key string) (string, error) {
 	nkey := strings.TrimSpace(key)
 
 	if nkey == "" || nkey == "/" {
-		return "", ErrInvalidKey
+		return "", ErrInvalidKey.New(key)
 	}
 
 	//
@@ -61,7 +61,7 @@ func NormalizeKey(key string) (string, error) {
 	nkey = strings.TrimPrefix(nkey, "/")
 
 	if nkey == "" || nkey == "." || nkey == ".." || strings.HasPrefix(nkey, "../") {
-		return "", ErrInvalidKey
+		return "", ErrInvalidKey.New(key)
 	}
 
 	return nkey, nil

@@ -38,7 +38,7 @@ func (s *S3Storage) Put(ctx context.Context, key string, reader io.Reader, size 
 		ContentType:  opts.ContentType,
 	})
 
-	return s3ErrorToFSError(err)
+	return s3ErrorToStorageError(err)
 }
 
 func (s *S3Storage) Get(ctx context.Context, key string, opts *storage.GetOptions) (io.ReadCloser, *storage.Stats, error) {
@@ -67,12 +67,12 @@ func (s *S3Storage) Get(ctx context.Context, key string, opts *storage.GetOption
 
 	objInfo, err := s.client.StatObject(ctx, s.bucket, key, getOpts) // since StatOpts is just alias...
 	if err != nil {
-		return nil, nil, s3ErrorToFSError(err)
+		return nil, nil, s3ErrorToStorageError(err)
 	}
 
 	reader, err := s.client.GetObject(ctx, s.bucket, key, getOpts)
 	if err != nil {
-		return nil, nil, s3ErrorToFSError(err)
+		return nil, nil, s3ErrorToStorageError(err)
 	}
 
 	stat := objectInfoToStats(objInfo)
@@ -105,7 +105,7 @@ func (s *S3Storage) Stat(ctx context.Context, key string) (*storage.Stats, error
 
 	objInfo, err := s.client.StatObject(ctx, s.bucket, key, minio.StatObjectOptions{})
 	if err != nil {
-		return nil, s3ErrorToFSError(err)
+		return nil, s3ErrorToStorageError(err)
 	}
 
 	stat := objectInfoToStats(objInfo)

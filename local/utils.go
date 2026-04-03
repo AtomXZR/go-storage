@@ -42,7 +42,7 @@ func keyToPath(key string) string {
 //
 
 func mkDirAll(path string) error {
-	return os.MkdirAll(path, 0755)
+	return toStorageError(os.MkdirAll(path, 0755))
 }
 
 func isDirExist(path string) bool {
@@ -64,7 +64,8 @@ func isDirExist(path string) bool {
 // }
 
 func createf(path string) (*os.File, error) {
-	return os.OpenFile(path, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0644)
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0644)
+	return file, toStorageError(err)
 }
 
 func readAll(path string) ([]byte, error) {
@@ -74,7 +75,12 @@ func readAll(path string) ([]byte, error) {
 	}
 	defer file.Close()
 
-	return io.ReadAll(file)
+	result, err := io.ReadAll(file)
+	if err != nil {
+		return nil, toStorageError(err)
+	}
+
+	return result, nil
 }
 
 //
@@ -84,7 +90,7 @@ func readAll(path string) ([]byte, error) {
 func writeDataFile(path string, r io.Reader, size int64) (hash string, err error) {
 	file, err := createf(path)
 	if err != nil {
-		return "", err
+		return "", toStorageError(err)
 	}
 	defer file.Close()
 
@@ -92,7 +98,7 @@ func writeDataFile(path string, r io.Reader, size int64) (hash string, err error
 
 	multiWriter := io.MultiWriter(file, hasher)
 	if _, err := io.CopyN(multiWriter, r, size); err != nil {
-		return "", err
+		return "", toStorageError(err)
 	}
 
 	//
@@ -149,7 +155,7 @@ func writeMetadataFile(path string, stats storage.Stats) (err error) {
 	}
 
 	if _, err := file.WriteString(json); err != nil {
-		return err
+		return toStorageError(err)
 	}
 
 	return nil

@@ -21,7 +21,7 @@ type LocalStorage struct {
 func (s *LocalStorage) getPath(key string) (baseDir string, dataFilePath string, metaFilePath string, err error) {
 	key, err = storage.NormalizeKey(key)
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", err // InvalidKey error
 	}
 
 	//
