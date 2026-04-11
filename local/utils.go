@@ -103,6 +103,12 @@ func writeDataFile(path string, r io.Reader, size int64) (hash string, err error
 
 	//
 
+	if err := file.Sync(); err != nil {
+		return "", toStorageError(err)
+	}
+
+	//
+
 	hash = hex.EncodeToString(hasher.Sum(nil))
 	return hash, nil
 }
@@ -158,7 +164,7 @@ func writeMetadataFile(path string, stats storage.Stats) (err error) {
 		return toStorageError(err)
 	}
 
-	return nil
+	return toStorageError(file.Sync())
 }
 
 func readMetadataFile(path string) (*storage.Stats, error) {

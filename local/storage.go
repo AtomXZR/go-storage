@@ -89,6 +89,7 @@ func (s *LocalStorage) Put(ctx context.Context, key string, reader io.Reader, si
 
 func (s *LocalStorage) Get(ctx context.Context, key string, opts *storage.GetOptions) (io.ReadCloser, *storage.Stats, error) {
 	opts = storage.GetOptionsOrDefault(opts)
+
 	baseDir, dataFilePath, metaFilePath, err := s.getPath(key)
 	if err != nil {
 		return nil, nil, err
@@ -105,30 +106,55 @@ func (s *LocalStorage) Get(ctx context.Context, key string, opts *storage.GetOpt
 		return nil, nil, err
 	}
 
+	//
+
+	if opts.Range != nil {
+		start := opts.Range.Start
+		end := opts.Range.End
+
+		//
+
+		if end == -1 {
+			end = meta.Size - 1
+		}
+
+		//
+
+		if start < 0 || end < start || end >= meta.Size {
+			return nil, nil, storage.ErrInvalid.New("invalid range")
+		}
+
+		length := end - start + 1
+
+		file, err := openReadf(dataFilePath)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		section := io.NewSectionReader(file, start, length)
+
+		//
+
+		outMeta := *meta
+		outMeta.Size = length
+
+		return struct {
+			io.Reader
+			io.Closer
+		}{
+			Reader: section,
+			Closer: file,
+		}, &outMeta, nil
+	}
+
+	//
+
 	file, err := openReadf(dataFilePath)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	var rc io.ReadCloser = file
-
-	//
-
-	if opts.Range != nil {
-		length := opts.Range.End - opts.Range.Start + 1
-
-		section := io.NewSectionReader(file, opts.Range.Start, length)
-		rc = struct {
-			io.Reader
-			io.Closer
-		}{section, file}
-
-		meta.Size = length
-	}
-
-	//
-
-	return rc, meta, nil
+	return file, meta, nil
 }
 
 func (s *LocalStorage) Stat(ctx context.Context, key string) (*storage.Stats, error) {

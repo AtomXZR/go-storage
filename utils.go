@@ -21,6 +21,7 @@ func init() {
 //
 //
 
+// Normalize Metadate key to Canonical Header uwu;
 func NormalizeMetadataKey(key string) string {
 	key = metadataRegEx.ReplaceAllString(key, "")
 	return http.CanonicalHeaderKey(key)
@@ -85,15 +86,17 @@ func PutOptionsOrDefault(opts *PutOptions) *PutOptions {
 		}
 	}
 
+	newOpts := *opts
+
 	//
 
-	if opts.ContentType == "" {
-		opts.ContentType = "application/octet-stream"
+	if newOpts.ContentType == "" {
+		newOpts.ContentType = "application/octet-stream"
 	}
 
 	//
 
-	return opts
+	return &newOpts
 }
 
 //
