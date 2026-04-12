@@ -1,6 +1,9 @@
 package storage
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 //
 //
@@ -18,6 +21,13 @@ func (k *StorageErrorKind) New(msg string) StorageError {
 	return StorageError{
 		kind:    k,
 		message: msg,
+	}
+}
+
+func (k *StorageErrorKind) Newf(msg string, a ...any) StorageError {
+	return StorageError{
+		kind:    k,
+		message: fmt.Sprintf(msg, a...),
 	}
 }
 

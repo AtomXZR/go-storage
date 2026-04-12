@@ -112,18 +112,24 @@ func (s *LocalStorage) Get(ctx context.Context, key string, opts *storage.GetOpt
 		start := opts.Range.Start
 		end := opts.Range.End
 
-		//
-
-		if end == -1 {
+		switch {
+		case start == 0 && end < 0:
+			// read last `-end` bytes. `bytes=-N`
+			start = meta.Size + end
 			end = meta.Size - 1
+			if start < 0 {
+				return nil, nil, storage.ErrInvalid.Newf("invalid range: start=%d end=%d", start, end)
+			}
+		case start > 0 && end == 0:
+			// read everything starting from offset `start`
+			end = meta.Size - 1
+		case start >= 0 && start <= end:
+			// read everything starting at `start` till the `end``
+		default:
+			return nil, nil, storage.ErrInvalid.Newf("invalid range: start=%d end=%d", start, end)
 		}
 
-		//
-
-		if start < 0 || end < start || end >= meta.Size {
-			return nil, nil, storage.ErrInvalid.New("invalid range")
-		}
-
+		// response length
 		length := end - start + 1
 
 		file, err := openReadf(dataFilePath)
@@ -147,7 +153,7 @@ func (s *LocalStorage) Get(ctx context.Context, key string, opts *storage.GetOpt
 		}, &outMeta, nil
 	}
 
-	//
+	// read full file
 
 	file, err := openReadf(dataFilePath)
 	if err != nil {
