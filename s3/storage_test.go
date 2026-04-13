@@ -1,28 +1,33 @@
 package s3_test
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/AtomXZR/go-storage"
 	"github.com/AtomXZR/go-storage/s3"
 	storage_test "github.com/AtomXZR/go-storage/test"
+	"github.com/joho/godotenv"
 )
 
 var instance storage.Storage
+var once sync.Once
 
 func setup(t *testing.T) (storage.Storage, string) {
 	t.Helper()
+	once.Do(func() {
+		_ = godotenv.Load()
+	})
 
 	dir := t.TempDir()
 
 	if instance == nil {
 		inst, err := s3.New(s3.Config{
-			Bucket:    "test-dev",
-			Endpoint:  "api.minio.owo-1.home.arpa",
-			AccessKey: "mRUzkj9eoGEMmTh5ak3D",
-			SecretKey: "9TD9uhx8EtgX3YwD4PofhPUiDRwur7wjzxIwRi1H",
-
-			UseSSL: false,
+			Bucket:    storage_test.GetEnvSkip(t, "S3_BUCKET"),
+			Endpoint:  storage_test.GetEnvSkip(t, "S3_ENDPOINT"),
+			AccessKey: storage_test.GetEnvSkip(t, "S3_ACCESS_KEY"),
+			SecretKey: storage_test.GetEnvSkip(t, "S3_SECRET_KEY"),
+			UseSSL:    storage_test.GetEnv("S3_USE_SSL") == "true",
 		})
 
 		if err != nil {

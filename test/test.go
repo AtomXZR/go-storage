@@ -12,6 +12,27 @@ import (
 	"github.com/AtomXZR/go-storage"
 )
 
+//
+//
+//
+
+func GetEnv(key string) string {
+	return os.Getenv(key)
+}
+
+func GetEnvSkip(t *testing.T, key string) string {
+	t.Helper()
+	v := GetEnv(key)
+	if v == "" {
+		t.Skipf("skipping: %s not set", key)
+	}
+	return v
+}
+
+//
+//
+//
+
 func dirname() string {
 	_, filename, _, _ := runtime.Caller(0)
 	return filepath.Dir(filename)
