@@ -96,7 +96,7 @@ func (s *LocalStorage) Get(ctx context.Context, key string, opts *storage.GetOpt
 	}
 
 	if !isDirExist(baseDir) {
-		return nil, nil, os.ErrNotExist
+		return nil, nil, storage.ErrKeyNotExist.Newf("key: %s", key)
 	}
 
 	//
@@ -170,7 +170,7 @@ func (s *LocalStorage) Stat(ctx context.Context, key string) (*storage.Stats, er
 	}
 
 	if !isDirExist(baseDir) {
-		return nil, os.ErrNotExist
+		return nil, storage.ErrKeyNotExist.Newf("key: %s", key)
 	}
 
 	//

@@ -20,11 +20,11 @@ func GetEnv(key string) string {
 	return os.Getenv(key)
 }
 
-func GetEnvSkip(t *testing.T, key string) string {
+func GetEnvFatal(t *testing.T, key string) string {
 	t.Helper()
 	v := GetEnv(key)
 	if v == "" {
-		t.Skipf("skipping: %s not set", key)
+		t.Fatalf("fataling: %s not set", key)
 	}
 	return v
 }
@@ -300,8 +300,8 @@ func DoTest(t *testing.T, store storage.Storage, tempDir string) {
 
 		t.Run("non-existent key", func(t *testing.T) {
 			_, _, err := store.Get(t.Context(), "does/not/exist.txt", nil)
-			if !errors.Is(err, os.ErrNotExist) {
-				t.Errorf("expected os.ErrNotExist, got %v", err)
+			if !errors.Is(err, storage.ErrKeyNotExist) {
+				t.Errorf("expected storage.ErrKeyNotExist, got %v", err)
 			}
 		})
 	})
@@ -345,8 +345,8 @@ func DoTest(t *testing.T, store storage.Storage, tempDir string) {
 
 		t.Run("non-existent key", func(t *testing.T) {
 			_, err := store.Stat(t.Context(), "does/not/exist.txt")
-			if !errors.Is(err, os.ErrNotExist) {
-				t.Errorf("expected os.ErrNotExist, got %v", err)
+			if !errors.Is(err, storage.ErrKeyNotExist) {
+				t.Errorf("expected storage.ErrKeyNotExist, got %v", err)
 			}
 		})
 	})
@@ -359,15 +359,15 @@ func DoTest(t *testing.T, store storage.Storage, tempDir string) {
 			}
 
 			_, err = store.Stat(t.Context(), "text/hello.txt")
-			if !errors.Is(err, os.ErrNotExist) {
-				t.Errorf("expected ErrNotExist after delete, got %v", err)
+			if !errors.Is(err, storage.ErrKeyNotExist) {
+				t.Errorf("expected storage.ErrKeyNotExist after delete, got %v", err)
 			}
 		})
 
 		t.Run("non-existent key", func(t *testing.T) {
 			// Should not error - idempotent delete
 			err := store.Delete(t.Context(), "does/not/exist.txt")
-			if err != nil && !errors.Is(err, os.ErrNotExist) {
+			if err != nil && !errors.Is(err, storage.ErrKeyNotExist) {
 				t.Errorf("unexpected error deleting non-existent key: %v", err)
 			}
 		})

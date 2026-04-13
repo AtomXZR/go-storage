@@ -16,17 +16,19 @@ var once sync.Once
 func setup(t *testing.T) (storage.Storage, string) {
 	t.Helper()
 	once.Do(func() {
-		_ = godotenv.Load()
+		if err := godotenv.Load("test.env"); err != nil {
+			t.Fatalf("load env error: %v", err)
+		}
 	})
 
 	dir := t.TempDir()
 
 	if instance == nil {
 		inst, err := s3.New(s3.Config{
-			Bucket:    storage_test.GetEnvSkip(t, "S3_BUCKET"),
-			Endpoint:  storage_test.GetEnvSkip(t, "S3_ENDPOINT"),
-			AccessKey: storage_test.GetEnvSkip(t, "S3_ACCESS_KEY"),
-			SecretKey: storage_test.GetEnvSkip(t, "S3_SECRET_KEY"),
+			Bucket:    storage_test.GetEnvFatal(t, "S3_BUCKET"),
+			Endpoint:  storage_test.GetEnvFatal(t, "S3_ENDPOINT"),
+			AccessKey: storage_test.GetEnvFatal(t, "S3_ACCESS_KEY"),
+			SecretKey: storage_test.GetEnvFatal(t, "S3_SECRET_KEY"),
 			UseSSL:    storage_test.GetEnv("S3_USE_SSL") == "true",
 		})
 
