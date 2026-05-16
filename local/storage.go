@@ -55,10 +55,19 @@ func (s *LocalStorage) Put(ctx context.Context, key string, reader io.Reader, si
 	tempDataFilePath := dataFilePath + ".tmp"
 	tempMetaFilePath := metaFilePath + ".tmp"
 
-	//
+	// best-effort cleanup: removes temps AND any partially-committed files.
+	// called on any error after the first temp write succeeds.
+	// errors from Remove are ignored — original error is what matters.
+	cleanup := func() {
+		os.Remove(tempDataFilePath)
+		os.Remove(tempMetaFilePath)
+		os.Remove(dataFilePath)
+		os.Remove(metaFilePath)
+	}
 
 	hash, err := writeDataFile(tempDataFilePath, reader, size)
 	if err != nil {
+		os.Remove(tempDataFilePath) // nothing else exists yet
 		return err
 	}
 
@@ -67,20 +76,25 @@ func (s *LocalStorage) Put(ctx context.Context, key string, reader io.Reader, si
 		ContentType:  opts.ContentType,
 		Size:         size,
 		LastModified: time.Now(),
-
-		Metadata: opts.Metadata,
+		Metadata:     opts.Metadata,
 	})
 	if err != nil {
+		os.Remove(tempDataFilePath)
+		os.Remove(tempMetaFilePath)
 		return err
 	}
 
 	//
 
 	if err := os.Rename(tempDataFilePath, dataFilePath); err != nil {
+		cleanup()
 		return err
 	}
 
+	// at this point data.bin is committed; if meta rename fails,
+	// cleanup removes data.bin too — a half-present key is worse than absent.
 	if err := os.Rename(tempMetaFilePath, metaFilePath); err != nil {
+		cleanup()
 		return err
 	}
 
@@ -124,7 +138,7 @@ func (s *LocalStorage) Get(ctx context.Context, key string, opts *storage.GetOpt
 			// read everything starting from offset `start`
 			end = meta.Size - 1
 		case start >= 0 && start <= end:
-			// read everything starting at `start` till the `end``
+			// valid
 		default:
 			return nil, nil, storage.ErrInvalid.Newf("invalid range: start=%d end=%d", start, end)
 		}
@@ -137,8 +151,6 @@ func (s *LocalStorage) Get(ctx context.Context, key string, opts *storage.GetOpt
 			return nil, nil, err
 		}
 
-		section := io.NewSectionReader(file, start, length)
-
 		//
 
 		outMeta := *meta
@@ -148,7 +160,7 @@ func (s *LocalStorage) Get(ctx context.Context, key string, opts *storage.GetOpt
 			io.Reader
 			io.Closer
 		}{
-			Reader: section,
+			Reader: io.NewSectionReader(file, start, length),
 			Closer: file,
 		}, &outMeta, nil
 	}

@@ -13,7 +13,6 @@ func parseMetadata(headers http.Header) storage.Metadata {
 
 	for k, v := range headers {
 		nk := storage.NormalizeMetadataKey(k)
-
 		nk = strings.TrimPrefix(nk, "X-Amz-Meta-")
 
 		if len(v) == 0 {

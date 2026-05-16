@@ -1,4 +1,4 @@
-pretty sure this implementation will come bite my in the ass later Owo;
+pretty sure this implementation will come bite me in the ass later Owo;
 
 ---
 
