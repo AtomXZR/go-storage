@@ -57,7 +57,7 @@ func (s *LocalStorage) Put(ctx context.Context, key string, reader io.Reader, si
 
 	// best-effort cleanup: removes temps AND any partially-committed files.
 	// called on any error after the first temp write succeeds.
-	// errors from Remove are ignored — original error is what matters.
+	// errors from Remove are ignored - original error is what matters.
 	cleanup := func() {
 		os.Remove(tempDataFilePath)
 		os.Remove(tempMetaFilePath)
@@ -92,7 +92,7 @@ func (s *LocalStorage) Put(ctx context.Context, key string, reader io.Reader, si
 	}
 
 	// at this point data.bin is committed; if meta rename fails,
-	// cleanup removes data.bin too — a half-present key is worse than absent.
+	// cleanup removes data.bin too - a half-present key is worse than absent.
 	if err := os.Rename(tempMetaFilePath, metaFilePath); err != nil {
 		cleanup()
 		return err
